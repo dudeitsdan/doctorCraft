@@ -1,0 +1,1280 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="icon" href="https://assets.codepen.io/1634552/DoctorCraft+Logo.png" type="image/x-icon">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+        <title>DoctorCraft</title>
+        <link href="https://fonts.googleapis.com/css?family=Sofia" rel="stylesheet">
+        <link href="https://fonts.cdnfonts.com/css/8bit-wonder" rel="stylesheet">
+        <link href="https://fonts.cdnfonts.com/css/pf-tempesta-seven" rel="stylesheet">
+        <link href="https://fonts.cdnfonts.com/css/common-pixel" rel="stylesheet">
+        <link href="https://fonts.cdnfonts.com/css/depixel" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+        <link href="https://fonts.cdnfonts.com/css/doctor-soos-bold" rel="stylesheet">
+
+        <!-- REACT STUFF -->
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+            <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            
+        <!-- styling -->
+        <link rel="stylesheet" href="css/snackbar.css/snackbar.css">
+        <link rel="stylesheet" href="css/main.css">
+        <link href="https://fonts.cdnfonts.com/css/depixel" rel="stylesheet">
+                
+
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+        <!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+    <style>
+        #welcomeContainer {
+            overflow-y:inherit;
+        }
+
+        h1, h2, h3 {
+            font-family: 'DePixel', sans-serif;
+        }
+        body {
+            justify-content: center;
+            width: 100%;
+            background-color: #f3f3f3;
+        }
+
+        nav {
+            background-color: #082e4f;
+            justify-items: right;
+            font-size: 30px;
+        }
+        #canvas {
+            justify-content: center;
+        }
+
+        #computerModal {
+            font-family: 'DePixel', sans-serif;
+        }
+        
+        .dialogue-section {
+            background-color: #f8f8f8; /* Light background for the dialogue sections */
+            border-radius: 10px; /* Rounded corners */
+            padding: 0px;
+            margin-bottom: 5px; /* Spacing between each dialogue section */
+            /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); Subtle shadow for depth */
+            font-family: 'Doctor Soos Bold', sans-serif;
+            margin-top: 0;
+            align-items: center;
+        }
+
+        .input-form {
+            display: flex; /* Flex layout for form elements */
+            align-items: center; /* Vertically center align items */
+            gap: 10px; /* Spacing between form elements */
+            flex-direction: column; /* Arrange items in a column */
+            border: none;
+        }
+
+        .input-field {
+            position: relative; /* Input field takes up available space */
+            /* padding: 8px; Padding inside the input field */
+            border: 1px solid #ccc; /* Border for input */
+            border-radius: 4px; /* Rounded corners for input field */
+            margin: 0;
+        }
+
+        .submit-button {
+            padding: 10px 15px;
+            background-color: lightblue; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+    .submit-button:hover {
+            background-color: #ddd; /* Darker on hover */
+        }
+
+    .game-container, .chat-container {
+        max-width: 400px;
+        margin: auto; /* Centers horizontally */
+        display: flex; /* Enables flexbox layout */
+        justify-content: center; /* Centers flex items horizontally */
+        height: 400px; /* Sets the height to the full viewport height */
+    }
+
+    .chat-container {
+        height: 400px;
+        background-color: #f3f3f3;
+        flex: none;
+        overflow-y: hidden;
+    }
+
+    .canvas-game {
+        width: 400px;
+        height: 500px;
+        background-color: #ddd;
+    }
+
+    #response-container {
+            /* position: relative; */
+            top: 0;
+            font-family: 'Doctor Soos Bold', sans-serif;
+            overflow-y: scroll;
+        }
+
+    .chat-box, .chat-send-box {
+        background-color: blue;
+        background-color: #333;
+        font-family: 'Doctor Soos Bold', sans-serif;
+        color: white;
+    }
+
+    #chatBox {
+        font-family: 'Doctor Soos Bold', sans-serif;
+        height: 100px;
+    }
+    #chatInputContainer {
+        display: none;
+        position: relative;
+        bottom: 0;
+        width: 100%;
+        background-color: #f3f3f3;
+        padding: 0px;
+        margin: 0px;
+        height: 100px;
+        font-size: 20px;
+    }
+
+
+
+    @media (min-width: 1000px) {
+        .main-container {
+            display: flex;
+            justify-content: center;
+            align-items: start; /* Align items to the start (top) in larger screens */
+        }
+
+        .chat-container {
+        }
+    }
+
+    #chatSendBox.chat-send-box {
+        color: white;
+        text-alight: right;
+        padding: 10px;
+    }
+    #chat-send-box {
+        text-alight: left;  
+    }
+
+    div#chatSendBox.chat-send-box {
+        height: 60px;
+    }
+
+    form {
+        margin: 0px;
+    }
+
+    input#dataInput1.input-field {
+        margin: 0;
+    }
+
+    .modal-body {
+        color: white;
+        display: flex;
+        background-color: #333;
+        flex-direction: column;
+        justify-content: space-between; /* Aligns children (content and form) */
+        height: 600px; /* Adjust height as needed */
+        overflow-y: auto;
+    }
+
+    .modal-computer {
+        padding: 10px;
+        display: flex;
+        background-color: #333;
+        flex-direction: column;
+        justify-content: space-between; /* Aligns children (content and form) */
+        height: 700px; /* Adjust height as needed */
+        overflow-y: auto;
+    }
+
+    /* Form Styles */
+    .input-form {
+        display: flex;
+        flex-direction: column;
+        width: 100%; /* Full width */
+    }
+
+    .input-field {
+        width: 100%; /* Full width */
+        margin-bottom: 10px; /* Space between input and button */
+    }
+
+    .submit-button {
+        width: 100%; /* Full width */
+    }
+
+    /* 
+    form#dataForm1.input-form {
+        position: absolute;
+        bottom: 0;
+    } */
+
+    .chat-box .chat-send-box {
+            margin-top: 0px;
+            padding: 10px;
+            background-color: #333; /* Light background for better visibility */
+            max-height: 300px; /* Limit height */
+            overflow-y: auto; /*Add scrollbar if content overflows*/
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Soft shadow for depth */
+            font-family: 'Common Pixel', sans-serif; /* Pixelated font */
+            color: #333; /* Darker text for readability */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Align items to the start (left) */
+            padding: 5px;
+    }
+
+
+        .input-form {
+            display: flex;
+            align-items: center;
+            gap: 0px;
+            flex-direction: column;
+        }
+
+        .input-field {
+            width: 100%; /* Responsive width */
+            /* padding: 8px; */
+            margin-right: 0; /* Spacing between input and button */
+        
+            border-radius: 4px; /* Rounded corners */
+        }
+
+        .submit-button {
+            padding: 10px 15px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #464846; /* Darker on hover */
+        }
+
+        .textAlignRight {
+            
+            text-align: right;
+        }
+
+        .custom-modal-size {
+        
+            width: 80%; /* Adjust width as needed */
+            max-width: 900px; /* Maximum width */
+            height: 00px; /* Adjust height as needed */
+
+        }
+
+        .custom-modal-size-computer {
+            height: 100%;
+            width: 95%;
+        }
+
+    </style>
+    </head>
+    <body>
+
+        <nav class="container-fluid">
+            <div>
+                <span><strong style="font-family: 'Doctor Soos Bold', sans-serif; font-size: 20px; color: white;">DoctorCraft</strong></span></span>
+                <span class="textAlignRight">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#" role="button">Contact</a></li>
+                <span>
+            </div>
+        </nav>
+
+        <svg id="alertCompIconOff" width="100" height="80" xmlns="http://www.w3.org/2000/svg">
+            <!-- Base of the computer -->
+            <rect x="10" y="60" width="80" height="10" fill="black"/>
+            <!-- Stand of the computer -->
+            <rect x="45" y="50" width="10" height="10" fill="black"/>
+            <!-- Screen of the computer -->
+            <rect x="20" y="10" width="60" height="40" rx="5" ry="5" fill="lightgray"/>
+            <!-- Screen Border -->
+            <rect x="20" y="10" width="60" height="40" fill="none" stroke="black"/>
+        </svg>
+        
+        <svg id="alertCompIconOn" width="100" height="80" xmlns="http://www.w3.org/2000/svg">
+            <!-- Base of the computer -->
+            <rect x="10" y="60" width="80" height="10" fill="black"/>
+            <!-- Stand of the computer -->
+            <rect x="45" y="50" width="10" height="10" fill="black"/>
+            <!-- Screen of the computer -->
+            <rect x="20" y="10" width="60" height="40" rx="5" ry="5" fill="lightgray"/>
+            <!-- Screen Border -->
+            <rect x="20" y="10" width="60" height="40" fill="none" stroke="black"/>
+            <!-- Notification Icon -->
+            <circle cx="72" cy="15" r="10" fill="red"/>
+            <text x="68" y="18" font-size="14" fill="white">!!</text>
+        </svg>
+
+        
+        <main class="container">
+            <div class="main-container">
+                <div class="game-container">
+                    <canvas 
+                        id="canvas"
+                        height=400
+                        width=400>
+                    </canvas>
+                </div>
+                <div class="chat-container">
+                    <div class="chat-container">
+                        <div id="welcomeContainer">
+                            <img src="https://assets.codepen.io/1634552/DoctorCraft+Logo.png">
+                            <p style="color: black">Click on the map to move.</p>
+                        </div>
+                        
+                        <div id="chatInputContainer">
+                            <section id="nurseDialogue" class="dialogue-section">
+                                <button type="button" data-toggle="modal" data-target="#nurseModal">
+                                    Speak to the nurse
+                                </button>
+                            </section>
+                            <div class="modal fade" id="nurseModal" tabindex="-1" aria-labelledby="nurseModalLabel" aria-hidden="true">
+                                <div class="modal-dialog custom-modal-size">
+                                <div class="modal-content">
+                                    <div class="modal-body" id="modal-Nurse">
+                                        <div id="response-container">
+                                            <div class="chat-box" id="chatBox-nurse"></div>
+                                            <div class="chat-send-box" id="chatSendBox-nurse" placeholder=" "></div>
+                                        </div>
+                                        <form id="dataForm1" class="input-form">
+                                            <input type="text" id="dataInput1" class="input-field" placeholder="Speak to the nurse...">
+                                            <button type="submit" class="submit-button">Submit</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        
+                            <section id="patientDialogue" class="dialogue-section">
+                                <button type="button" data-toggle="modal" data-target="#patientModal">
+                                    Speak to the Patient
+                                </button>
+                                
+                                <div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog custom-modal-size">
+                                    <div class="modal-content">
+                                        <div class="modal-body" id="modal-patient">
+                                            <div id="response-container">
+                                                <div class="chat-box" id="chatBox-patient"></div>
+                                                <div class="chat-send-box" id="chatSendBox-patient" placeholder=" "></div>
+                                            </div>
+                                            <form id="dataForm2" class="input-form">
+                                                <input type="text" id="dataInput2" class="input-field" placeholder="Speak to the patient...">
+                                                <button type="submit" class="submit-button">Submit</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            </section>
+                
+                            <section id="familyMemberDialogue" class="dialogue-section">
+                                
+                                    <button type="button" data-toggle="modal" data-target="#familyMemberModal">
+                                        Speak to the Family Member
+                                    </button>
+                                    
+                                    <div class="modal fade" id="familyMemberModal" tabindex="-1" aria-labelledby="familyMembertModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog custom-modal-size">
+                                        <div class="modal-content">
+                                            <div class="modal-body" id="modal-familyMember">
+                                                <div id="response-container">
+                                                    <div class="chat-box" id="chatBox-familyMember"></div>
+                                                    <div class="chat-send-box" id="chatSendBox-familyMember" placeholder=" "></div>
+                                                </div>
+                                                
+                                                    <form id="dataForm3" class="input-form">
+                                                        <input type="text" id="dataInput3" class="input-field" placeholder="Speak to the family member">
+                                                        <button type="submit" class="submit-button">Submit</button>
+                                                    </form>
+
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </div>
+                            </section>
+
+                            <section id="computerDialogue" style="font-family: 'font-family: 'PF Tempesta Seven Compressed', sans-serif;'; background-color: white;">
+                                <button type="button" data-toggle="modal" data-target="#computerModal">
+                                    Log into the Computer</button>
+                                
+                                <div class="modal fade" id="computerModal" tabindex="-1" aria-labelledby="familyMembertModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog custom-modal-size-computer">
+                                    <div class="modal-content">
+                                        <div class="modal-computer" id="modalComputer">
+                                            <section id="errorMessageDuplicates"></section>
+                                            <!-- <div id="response-container">
+                                                <div class="chat-box" id="chatBox-familyMember"></div>
+                                                <div class="chat-send-box" id="chatSendBox-familyMember" placeholder=" "></div>
+                                            </div>
+                                            
+                                                <form id="dataForm4" class="input-form">
+                                                    <input type="text" id="dataInput3" class="input-field" placeholder="Speak to the family member">
+                                                    <button type="submit" class="submit-button">Submit</button>
+                                                </form> -->
+                                                <div id="patientList">
+                                                    <h1 style="color: white; ">Electronic Medical Record</h1>
+                                                    <h3 style="color: white">Patients</h2>
+                                                    <ul>
+                                                    <!-- List of patients -->
+                                                    <li><a href="#" class="button-style" onclick="openPatientDetail('Patient1')">Patient 1</a></li>
+                                                    <!-- More patients -->
+                                                    </ul>
+                                                </div>
+                                                
+                                                <!-- Patient Detail Page -->
+                                                <div id="patientDetail" style="display:none; font-family: 'font-family: 'PF Tempesta Seven Compressed', sans-serif;', sans-serif;">
+                                                    <h2 style="color:white">Patient Detail</h2>
+                                                    <button style="" onclick="openOrders()">Orders</button>
+                                                    <button style="" onclick="openResults()">Results</button>
+                                                    <button style="" onclick="openNotes()">Notes</button>
+                                                </div>
+                                                
+                                                <!-- Orders Page -->
+                                                <div id="orders" style="display: none; justify-content: center;">
+                                                    <h3>Orders</h3>
+                                                    <ul>
+                                                    <div><a  class="button-style"href="#" onclick="openLabs()">Labs</a></div>
+                                                    <div><a  class="button-style"href="#" onclick="openImagingOrders()">Imaging</a></div>
+                                                    <div><a  class="button-style"href="#" onclick="openMedsOrders()">Medications</a></div>
+                                                    <div><a  class="button-style" href="#" onclick="openConsults()">Consults</a></div>
+                                                    </ul>
+                                                    <!-- <button onclick="showPatientList()">Back to Patient List</button> -->
+                                                </div>
+                                                
+                                                <!-- Results Page -->
+                                                <div id="results" style="display: none">
+                                                    <h3>Results</h3>
+                                                    <ul>
+                                                        <div><a class="button-style" href="#" onclick="showVitals()">Vitals</a></div>
+                                                        <div><a class="button-style" href="#" onclick="showLabs()">Labs</a></div>
+                                                        <div><a class="button-style" href="#" onclick="showImaging()">Imaging</a></div>
+                                                    </ul>
+                                                    <!-- <button onclick="showPatientList()">Back to Patient List</button> -->
+                                                </div>
+                                                
+                                                <div id="resultsVitals" style="display:none; color: white;">
+                                                    <h3>Vitals</h3>
+                                                    <div id="bpVitalsResults"></div>
+                                                    <div id="HRVitalsResults"></div>
+                                                    <div id="tempVitalsResults"></div>
+                                                    <div id="SpO2VitalsResults"></div>
+                                                    <!-- <button onclick="showPatientList()">Back</button> -->
+                                                </div>
+
+                                                <div id="resultsLabs" style="display:none; overflow: auto;">
+                                                    <h3>Lab Results</h3>
+                                                    <div id="resultLabsContainer" style="overflow: auto"></div>
+                                                    <!-- <button onclick="showPatientList()">Back</button> -->
+                                                </div>
+
+                                                <div id="resultsImaging" style="display:none;">
+                                                    <h3>Imaging Results</h3>
+                                                    <div id="resultLabsContainer"></div>
+                                                    <!-- <button onclick="showPatientList()">Patient List</button> -->
+                                                </div>
+                                                
+                                                
+                                                <!-- Notes Page -->
+                                                <div id="notes" style="display:none;">
+                                                    <h3>Notes</h3>
+                                                    <button onclick="writeNote()">Write a Note</button>
+                                                    <button onclick="reviewNotes()">Review Notes</button>
+                                                    <br>
+                                                    <!-- <button onclick="showPatientList()">Patient List</button> -->
+                                                </div>
+                                                
+                                                <!-- Order Labs Page -->
+                                                <div id="labOrdersContainer" style="display:none; background-color: #333; color: white;"></div>
+                                                <div id="imageOrdersOuterContainer" style="display:none; background-color: #333; color: white;"></div>
+                                                <div id="medsOrdersOuterContainer" style="display:none; background-color: #333; color: white;"></div>
+                                                
+                                                <script type="module">
+                                                    import createLabOrdersModule from '/components/labOrdersComponent.js'
+                                                    import createImageOrdersModule from './components/imageOrdersComponent.js'
+                                                    import createMedsOrdersModule from './components/medicationOrdersComponent.js'
+                                                    createLabOrdersModule();
+                                                    createImageOrdersModule();
+                                                    createMedsOrdersModule();
+                                                    
+                                                </script>
+                                                    
+                                                <br>
+<!--                                                 
+                                                <button id="orderedLabsListContainerSubmitBtn" onclick="orderedLabsListContainerSubmitBtnFn()">Submit</button> -->
+                                                <button onclick="showPatientList()">Patient List</button>
+                                                <button style="position: relative; top: 0; left: 0; padding: 10px; background-color: green" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <div>Exit</div>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                            
+                                <!-- <form id="dataForm4" class="input-form">
+                                    <input type="text" id="dataInput4" class="input-field" placeholder="Message the Narrator">
+                                    <button type="submit" class="submit-button">Submit</button>
+                                </form> -->
+                                                    
+                    </div>
+                </div>
+            </div>
+        </main>
+            <div id="monitoring"></div>
+
+            <button id="deleteCollectionButton1" class="submit-button" onClick="deleteChatBoxes('nurse')">Delete Nurse Convo</button>
+            <button id="deleteCollectionButton2" class="submit-button" onClick="deleteChatBoxes('patient')">Delete Patient Convo</button>
+            <button id="deleteCollectionButton3" class="submit-button" onClick="deleteChatBoxes('familyMember')">Delete Family Member Convo</button>
+            <button id="deleteItAllBtn" onClick="deleteMainConvo();">DELETE mainCollection</button><div>Be sure to delete the other three above as well</div>
+            <button id="updateMonitoring" onclick="monitorUpdate()"></button>
+            
+        <footer id="footer">
+            <div>Made By Daniel Rongo, MD</div>
+        </footer>
+        
+
+        </body>
+        <script>
+            //GLOBAL VARIABLES
+
+            var final = {
+                labs: [],
+                imaging: [],
+                differentialDx: [],
+                medications: [],
+                note: [],
+            }
+
+        </script>
+        <script>
+
+        var patientDetails = {};
+        
+        function fetchData() {
+            fetch('/patientDetails')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Process and display data
+                    patientDetails.heartRate = data[0].details.heartRate;
+                    patientDetails.sysBP = data[0].details.systolicBP;
+                    patientDetails.diaBP = data[0].details.diastolicBP;
+                    patientDetails.temperature = data[0].details.temperature;
+                    patientDetails.SpO2 = data[0].details.SpO2;
+
+                    document.getElementById('tempVitalsResults').innerHTML = `Temperature: ${patientDetails.temperature} deg F`;
+                    document.getElementById('HRVitalsResults').innerHTML = `Heart Rate: ${patientDetails.heartRate}`;
+                    document.getElementById('bpVitalsResults').innerHTML = `Blood Pressure: ${patientDetails.sysBP}/${patientDetails.diaBP}`;
+                    document.getElementById('SpO2VitalsResults').innerHTML = `SpO2: ${patientDetails.SpO2}%`;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        fetchData(); // Call the function to fetch data
+
+
+        function monitorUpdate() {
+            $.ajax({
+                        url: `/dataFromGlobalConvo`,
+                        type: 'GET',
+                        success: function(data) {
+                            // Assuming 'data' is a string or text data
+                            if (data.length > 0) {
+
+                                // var sData = JSON.stringify(data[data.length-1].content)
+                                console.log(data)
+                                const newData = data.map(obj => {
+                                    delete obj._id
+                                    return obj
+                                })
+
+                                console.log("hey you!:", newData[0].content)
+                                var parsedJson = JSON.parse(newData[0].content)
+                                console.log("Finally!", parsedJson)
+                                
+                                // var newerData=[];
+                                // for (let i=0; i<newData[newData.length-1]; i++) {
+                                //     newerData.push(JSON.parse(newData[i]));
+                                //     }
+                                // document.getElementById('monitoring').innerHTML = "well"+new
+                                // // console.log(newerData)
+                            }
+                        
+                        // var tempGlobalConvoTracker = data
+                        // // console.log(JSON.stringify(data))
+                        // var tempData = [];
+                        // for (let i=0; i<tempGlobalConvoTracker.length; i++) {
+                        //     tempData.push(
+                        //         { "role": tempGlobalConvoTracker[i].role, "content": tempGlobalConvoTracker[i].content}
+                        //     )
+                        // }
+                        // // console.log(tempData)
+                        // globalConvoTracker = tempData
+                        // console.log("index:", globalConvoTracker)
+                        // console.log(globalConvoTracker[0].role" after the fact")
+                        },
+                        error: function(error) {
+                            console.log('Error:', error);
+                        }
+                    });
+            }
+
+        var resultAlertOn=false;
+        
+
+        function alertCompOnFn() {
+            if (resultAlertOn == true) {
+                document.getElementById('alertCompIconOff').style.display = "none"
+                document.getElementById('alertCompIconOn').style.display = "block"
+            } else if (resultAlertOn === false) {
+                document.getElementById('alertCompIconOff').style.display = "block"
+                document.getElementById('alertCompIconOn').style.display = "none"
+            }  
+            // console.log(resultAlertOn)
+        }
+        
+    //UPON INITIALLZATION OF WEBPAGE, CREATION OF GLOBALCONVOTRACKER TO MONITOR ALL CONVERSATION WITH ROLES
+        var globalConvoTracker = [];
+        (function() {
+                    $.ajax({
+                        url: `/dataFromGlobalConvo`,
+                        type: 'GET',
+                        success: function(data) {
+                            // Assuming 'data' is a string or text data
+                            if (data.length > 0) {
+                                var sData = JSON.stringify(data[data.length-1].content)
+                            }
+                        
+                        var tempGlobalConvoTracker = data
+                        // console.log(JSON.stringify(data))
+                        var tempData = [];
+                        for (let i=0; i<tempGlobalConvoTracker.length; i++) {
+                            tempData.push(
+                                { "role": tempGlobalConvoTracker[i].role, "content": tempGlobalConvoTracker[i].content}
+                            )
+                        }
+                        // console.log(tempData)
+                        globalConvoTracker = tempData
+                        console.log("index:", globalConvoTracker)
+                        // console.log(globalConvoTracker[0].role" after the fact")
+                        },
+                        error: function(error) {
+                            console.log('Error:', error);
+                        }
+                    });
+                }); //be sure to add this back
+
+            // AJAX POST REQUEST
+    function ajxReqPOST(form, input, location, role) {
+        form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    document.getElementById(`chatSendBox-${role}`).innerHTML = document.getElementById(input).value;
+                    const inputData = {
+                        "role": "user", 
+                        "content": document.getElementById(input).value, // I send purely the message itself, the JSON is added in the back-end. I am considering changing this.
+                            /* I am considering changing this such that the JSON is passed on the back-end to the back-end. 
+                                    Pros:
+                                        - Better processing on front-end
+                                        - Allows for utilization of global variables on client side that are easier to work with
+                                        
+                                    Cons: 
+                                        - May be a lot of data that I am sending at a time (if I were to pass JSON rather a singular message)
+                                            - However, I am passing HUGE (relatively speaking) data files to chatGPT for conversation? So maybe that argument is moot, especially since GPT data is more costly
+                            */
+                        "customMessage": document.getElementById(input).value, 
+                        "currentTimeOfGame": performance.now()/1000,
+                    }
+                        
+                        document.getElementById(input).value = ""; //clears field for next text interaction
+                        // THIS PUTS IT OUT INTO THE SERVER ETHER AND NOW WE WAIT
+        
+                        fetch(location, {
+                            method: 'POST',//THIS IS THE SET UP FOR THE MESSAGE
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(inputData) // THIS IS THE MESSAGE
+                        })
+
+
+                        // THIS IS WHAT HAPPENS ONCE THE ETHER GIVES US DATA BACK
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log("Before JSON parse:", data.content)
+
+                            let testJSON={};
+                            
+                            function isJson(str) {
+                                    try {
+                                        JSON.parse(str);
+                                        return true;
+                                    } catch (e) {
+                                        return false;
+                                    }
+                                }
+    // 
+                                // console.log("checking if JSON:", isJson(data.content))
+
+                                // if (isJSON(data.content)) {
+                                //     console.log("true! is truly JSON") 
+                                // } if (!isJSON(data.content)) {
+                                //     consoe.log("is STRING NOT JSON")
+                                // }
+
+                                if (isJson(data.content)) {
+                                    console.log("NPC RETURNED JSON");
+                                    console.log("This is it:", data.content)
+                                    var jsonData = JSON.parse(data.content)
+
+                                    //adds returned message back to chat box
+                                    document.getElementById(`chatBox-${role}`).innerHTML = jsonData.message
+                                    console.log(jsonData.roleplaying_role)
+                                    //***Remember, other data contents include:
+                                    /// jsonData.emotion
+                                    // jsonData.cardiac_Arrest (or something of that nature)
+                                    //(((You can use other properties for various effects^^^)))
+
+                                } if (!isJson(data.content)) {
+                                    console.log("NPC DID NOT RETURN JSON, SOME DATA MAY BE MISSING");
+                                    console.log("This is it:", data.content)
+                                    
+                                    var fixedData = data.content
+                                    fixedData = fixedData.replace(/'/g, '"').replace(/"([^"]+)":/g, "'$1':");
+                                    let fixedObject;
+                                        try {
+                                                fixedObject = JSON.parse(fixedData);
+                                            } catch (e) {
+                                                console.error("Error parsing JSON string:", e.message);
+                                            }
+                                    console.log("I think it is fixed:", fixedObject)
+                                    document.getElementById(`chatBox-${role}`).innerHTML = data.content
+                                }
+                            
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
+
+    }
+
+    function ajxReqGET(id, location) {
+        $(document).ready(function() {
+                $(`#${id}`).click(function() {
+                    $.ajax({
+                        url: `http://localhost:3003${location}`,
+                        type: 'GET',
+                        success: function(data) {
+                            // Assuming 'data' is a string or text data
+                        var sData = JSON.stringify(data[data.length-1].content)
+                        $('#chatBox').text(sData);
+                        // console.log(JSON.stringify(data[data.length-1].content))
+                        },
+                        error: function(error) {
+                            console.log('Error:', error);
+                        }
+                    });
+                });
+        });
+    }
+
+    //DELETE AJAX PATHWAY
+    function ajxReqDELETE(HTML_id, db) {
+        $(document).ready(function() {
+            $(`#${HTML_id}`).click(function() {
+
+                    $.ajax({
+                        url: db,
+                        method: 'DELETE',
+                        success: function(response) {
+                            console.log(response);
+                        },
+                        error: function() {
+                            console.log('Error deleting collection');
+                        }
+                    });
+                
+            });
+        });
+    }
+
+    function deleteChatBoxes(role) {
+        document.getElementById(`chatBox-${role}`).innerHTML = ""
+        document.getElementById(`chatSendBox-${role}`).innerHTML = ""
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form1 = document.getElementById('dataForm1');
+        const form2 = document.getElementById('dataForm2');
+        const form3 = document.getElementById('dataForm3');
+        // const form4 = document.getElementById('dataForm4');
+
+        ajxReqPOST(form1, 'dataInput1', '/nurseData', 'nurse');
+        ajxReqPOST(form2, 'dataInput2', '/patientData', 'patient');
+        ajxReqPOST(form3, 'dataInput3', '/familyMemberData', 'familyMember');
+        // ajxReqPOST(form4, 'dataInput4', '/data-from-db4');
+
+        ajxReqGET('fetch-db1', '/nurseData');
+        ajxReqGET('fetch-db2', '/patientData');
+        ajxReqGET('fetch-db3', '/familyMemberData');
+        
+
+        ajxReqDELETE('deleteCollectionButton1', '/nurseData');
+        ajxReqDELETE('deleteCollectionButton2', '/patientData');
+        ajxReqDELETE('deleteCollectionButton3', '/familyMemberData');
+        // ajxReqDELETE('deleteItAllBtn', '/dataFromGlobalConvo');
+    })
+
+    function deleteMainConvo() {
+        fetch('http://localhost:3003/dataFromGlobalConvo', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            // Additional headers if required
+        },
+        body: JSON.stringify({
+            // Your request body, if needed
+        })
+    })
+    .then(response => response.json())
+    .then(data => console.log('Success:', data))
+    .catch((error) => console.error('Error:', error));
+    }
+        
+    </script>
+
+    <script type="module">
+
+        //GAME PARAMETERS
+        var CXRtoggled = false;
+
+
+    // 
+        import { Hero } from "./modules/hero.js";     var hero = new Hero(1);
+        console.log(hero)
+
+
+    // Define barriers array
+    var barriers = [
+        { x: 180, y: 10, width: 10, height: 230 }, 
+        { x: 293, y: 10, width: 5, height: 185 }, 
+        { x: 100, y: 190, width: 134, height: 5 }, 
+        { x: 5, y: 360, width: 400, height: 5 }, 
+        { x: 5, y: 30, width: 400, height: 5 }, 
+        { x: 25, y: 10, width: 10, height: 380 }, 
+        { x: 400, y: 10, width: 5, height: 380 }, 
+        { x: 360, y: 150, width: 50, height: 80 }, 
+        { x: 100, y: 80, width: 20, height: 20 }, 
+        { x: 120, y: 200, width: 10, height: 10}, //computer    
+    ];
+
+    // Function to draw barriers
+    function drawBarriers() {
+        ctx.fillStyle = "rgba(255, 0, 0, 0.5)";  // Transparent red color
+        barriers.forEach(function(barrier) {
+            ctx.fillRect(barrier.x-20, barrier.y-20, barrier.width, barrier.height);
+        });
+    }
+
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        var lobbyImage = "https://assets.codepen.io/1634552/LobbyWithBedsHallway_3.png";
+        var doctorImage = "https://assets.codepen.io/1634552/standingDoctor.png";
+        var patientImage = "https://assets.codepen.io/1634552/SicklyPatientStanding.png";
+        var nurseImage = "https://assets.codepen.io/1634552/Nurse.png";
+        var wallImage = "https://assets.codepen.io/1634552/half-wall.png";
+        var familyMemberImage = "https://assets.codepen.io/1634552/familyMember-grandma.png";
+        var computerImage = "https://assets.codepen.io/1634552/Computer.png"
+
+        var docWalkArray = [
+            "https://assets.codepen.io/1634552/standingDoctor2.png",
+
+            "https://assets.codepen.io/1634552/standingDoctor1.png",
+            
+            "https://assets.codepen.io/1634552/standingDoctor2.png",
+
+            "https://assets.codepen.io/1634552/standingDoctor1.png",
+
+            "https://assets.codepen.io/1634552/standingDoctor2.png",
+            
+            "https://assets.codepen.io/1634552/standingDoctor1.png",
+            
+            "https://assets.codepen.io/1634552/standingDoctor2.png",
+
+            "https://assets.codepen.io/1634552/standingDoctor1.png",     
+        ];
+
+        var walkingTimer=0;
+        var walkingTimerMarker=0;
+        // function displayWalking() {
+        //     if (performance.now() - walkingTimer > 500) {
+        //         walkingTimerMarker++;
+        //         walkingTimer = performance.now();
+        //         // console.log("frame:", walkingTimerMarker)
+        //         if (walkingTimerMarker > docWalkArray.length-1) {
+        //             walkingTimerMarker = 0 
+        //         }
+        //         docWalkimg.src = docWalkArray[walkingTimerMarker];
+        //         // console.log(docWalkArray[walkingTimerMarker]) 
+        //     }
+        //     requestAnimationFrame(displayWalking)
+        // } 
+        import { doctorResource } from './artDesign/imageResources.js'
+        import { displayWalking } from "./artDesign/walkingAnimation.js"
+        displayWalking();
+        
+        var lobby = new Image();
+        lobby.onload = function() {
+            ctx.drawImage(lobby, 0, 0, canvas.width, canvas.height);
+        };
+        lobby.src = lobbyImage;
+
+        var position = {
+            nurse: {
+                posX: 150,
+                posY: 200,
+            },
+            patient: {
+                posX: 73,
+                posY: 60
+            },
+            doctor: {
+                posX: 100,
+                posY: 250,
+                withinNurseField: false,
+                withinPatientField: false,
+                withinFamilyMemberField: false,
+            },
+            familyMember: {
+                posX: 130,
+                posY: 50,
+            },
+            computer: {
+                posX: 80, 
+                posY: 180, 
+            }
+        }
+
+        position.nurse.arcProperties = {
+                    centerX: position.nurse.posX + 18,
+                    centerY: position.nurse.posY + 25,
+                    radius: 50,
+                    startAngle: 6.2, // Radians
+                    endAngle: Math.PI, // Radians
+                }
+        position.patient.arcProperties = {
+                    centerX: position.patient.posX + 18,
+                    centerY: position.patient.posY + 25,
+                    radius: 50,
+                    startAngle: 0, // Radians
+                    endAngle: Math.PI, // Radians
+                }            
+        position.familyMember.arcProperties = {
+                    centerX: position.familyMember.posX + 18,
+                    centerY: position.familyMember.posY + 50,
+                    radius: 80,
+                    startAngle: 1.1, // Radians
+                    endAngle: 1*Math.PI, // Radians 
+        }
+        position.computer.arcProperties = {
+                centerX: position.computer.posX,
+                    centerY: position.computer.posY,
+                    radius: 50,
+                    startAngle: 0, // Radians
+                    endAngle: 1*Math.PI, // Radians 
+        }   
+
+        
+        var vendingMachineIcon = {}
+        vendingMachineIcon.src = "https://assets.codepen.io/1634552/VendingMachine.png"
+
+        var toolBar = {
+            radsIcon: {
+            src: "https://assets.codepen.io/1634552/CXR.png"
+            },
+            labsIcon: {
+                src: "https://assets.codepen.io/1634552/LabBottle.png"
+            },
+            phoneIcon: {
+                src: "https://assets.codepen.io/1634552/CellPhone.png"
+            },
+            plantIcon: {
+                src: "https://assets.codepen.io/1634552/PlantNew_1.png"
+            },
+            
+        }
+
+        var imaging = {
+            cxr: {
+                src: "https://assets.codepen.io/1634552/realCXR.png",
+            }
+        }
+        imaging.cxr.img = new Image();
+        imaging.cxr.img.src=imaging.cxr.src;
+
+        var convoActivater = {
+            nurse: {
+                xLeft: position.nurse.posX-20,
+                xRight: position.nurse.posX+20,
+                yUp: position.nurse.posY-20,
+                yDown: position.nurse.posY+20,
+            },
+        }
+
+        function activate() {
+                //calls function whenever inside a triggerArea
+        }
+
+        var globalTruthTrigger = false;
+        function isDoctorInArc(role) {
+            let dx = position.doctor.posX - position[role].arcProperties.centerX;
+            let dy = position.doctor.posY - position[role].arcProperties.centerY;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < position[role].arcProperties.radius) {
+                // Check if within angle range
+                let angle = Math.atan2(dy, dx);
+                
+                document.getElementById(`${role}Dialogue`).style.display = "block";
+
+                if (angle >= position[role].arcProperties.startAngle && angle <= position[role].arcProperties.endAngle) {
+                    return true;
+                } else {
+                }
+            }
+            if (distance > position[role].arcProperties.radius) {
+                // console.log("withinNurseField: ", false);
+                // position.doctor.withinNurseField = false;
+                document.getElementById(`${role}Dialogue`).style.display = "none";
+            }
+            return false;
+        }
+        
+        // function checkTriggerConvoPosition(){
+        //         if (
+        //             doc.PosX > 10
+        //         ) {}
+
+        //     requestAnimationFrame(checkTriggerConvoPosition)
+        // }
+
+        var docWalkimg = new Image();
+            docWalkimg.src = doctorResource.docWalkArray[doctorResource.walkingTimerMarker];
+
+        var patientimg = new Image();
+            patientimg.src = patientImage;
+
+        var nurseimg = new Image();
+            nurseimg.src = nurseImage;
+
+        var familyMemberimg = new Image();
+            familyMemberimg.src = familyMemberImage;
+        
+        var wallimg = new Image();
+            wallimg.src = wallImage
+
+        var phoneIconimg = new Image();
+            phoneIconimg.src = toolBar.phoneIcon.src
+
+        var labsIconimg = new Image();
+            labsIconimg.src = toolBar.labsIcon.src
+
+        var radsIconimg = new Image();
+            radsIconimg.src = toolBar.radsIcon.src
+
+        var plantIconimg = new Image();
+            plantIconimg.src = toolBar.plantIcon.src
+
+        var vendingMachineimg = new Image();
+            vendingMachineimg.src = vendingMachineIcon.src
+
+        var computerimg = new Image();
+            computerimg.src = computerImage
+
+        var targetPos = null;
+
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            targetPos = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(lobby, 0, 0, canvas.width, 400);
+            
+            ctx.drawImage(patientimg, position.patient.posX, position.patient.posY, 35, 50);
+            ctx.drawImage(familyMemberimg, position.familyMember.posX-20, position.familyMember.posY, 50, 50)
+            moveCharacter();
+            ctx.drawImage(wallimg, 75, 164, 149, 60);
+            ctx.drawImage(nurseimg, position.nurse.posX, position.nurse.posY, 35, 50);
+            ctx.drawImage(phoneIconimg, 25, 410, 20, 40)
+            ctx.drawImage(labsIconimg, 60, 412, 40, 40)
+            ctx.drawImage(radsIconimg, 120, 412, 40, 40)
+            ctx.drawImage(plantIconimg, 60, 295, 40, 70)
+            ctx.drawImage(vendingMachineimg, 300, 280, 70, 80)
+            ctx.drawImage(computerimg, position.computer.posX, position.computer.posY, 40, 40)
+
+            alertCompOnFn() // checks if alert icons need to change
+            
+            if (CXRtoggled) {
+                ctx.drawImage(imaging.cxr.img, 0, 0, 300,300)
+            }
+
+            if (isDoctorInArc("nurse")) {activate();}
+            if (isDoctorInArc("patient")) {activate();}
+            if (isDoctorInArc("familyMember")) {activate();}
+            if (isDoctorInArc("computer")) {activate();}
+
+            //drawing parameters for triggers and barriers
+            // drawBarriers();  // Draw barriers
+            // drawTriggerCircle("nurse", position.nurse.arcProperties.startAngle);
+            // drawTriggerCircle("patient", position.patient.arcProperties.startAngle);
+            // drawTriggerCircle("familyMember", position.familyMember.arcProperties.startAngle);
+            // drawTriggerCircle("computer", position.computer.arcProperties.startAngle);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function drawTriggerCircle (role, rad) {
+            ctx.beginPath();
+            ctx.arc(position[role].posX+18, position[role].posY+25, position[role].arcProperties.radius, rad, 1 * Math.PI);
+            ctx.closePath();
+
+            ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+            ctx.fill();
+        }
+        
+        var doctorIsWalking = false;
+
+        function moveCharacter() {
+
+        if (targetPos === null) {
+            ctx.drawImage(doctorResource.doctorimg, position.doctor.posX-20, position.doctor.posY, 30, 50)
+        }
+        if (targetPos) {
+            var dx = targetPos.x - position.doctor.posX;
+            var dy = targetPos.y - position.doctor.posY;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > hero.heroSkills.speed/2) {
+                ctx.drawImage(doctorResource.docWalkimg, position.doctor.posX-20, position.doctor.posY, 30, 50);
+                doctorIsWalking = true;
+            }
+
+            if (targetPos.y < 400) {
+                if (distance < hero.heroSkills.speed/2) {
+                position.doctor.posX = targetPos.x;
+                position.doctor.posY = targetPos.y;
+                targetPos = null;
+                doctorIsWalking = false;       
+            } 
+            
+            else {
+                var moveX = (dx / distance) * hero.heroSkills.speed;
+                var moveY = (dy / distance) * hero.heroSkills.speed;
+                
+                // Check for collisions here before updating docPos
+                if (!isColliding(position.doctor.posX + moveX, position.doctor.posY + moveY)) {
+                    position.doctor.posX += moveX;
+                    position.doctor.posY += moveY;
+                        }
+                    }
+                } 
+            }
+        }
+
+    // Function to check collisions
+    function isColliding(newX, newY) {
+        var collision = false;
+        barriers.forEach(function(barrier) {
+            if (newX < barrier.x + barrier.width &&
+                newX + 40 > barrier.x &&  // 40 is the width of the character
+                newY < barrier.y + barrier.height &&
+                newY + 50 > barrier.y) {  // 50 is the height of the character
+                collision = true;
+                }
+            });
+            return collision;
+        }
+
+    // Function to add new barrier
+    function addBarrier(x, y, width, height) {
+        barriers.push({ x: x, y: y, width: width, height: height });
+    }
+        // Start the game loop
+        gameLoop();
+
+    var cxrOrdered = false;
+    function toggleCXRImaging() {
+        if (cxrOrdered === true) {
+            if (CXRtoggled === true) {
+                return CXRtoggled = false
+            }
+            if (CXRtoggled === false) {
+                return CXRtoggled = true
+            }
+        }
+        if (cxrOrdered === false) {
+            alert("You must order a chest x-ray first")
+        }
+    }
+
+        // This function will be called whenever the canvas is clicked
+    function onCanvasCXRClick(event) {
+        const canvas = document.getElementById('canvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left; // x position within the canvas
+        const y = event.clientY - rect.top; // y position within the canvas
+
+        // Define the specific area, for example a rectangle
+        const specificArea = { x1: 120, y1: 412, x2: 160, y2: 452 }; // Specific area coordinates
+
+        // Check if the click was inside the specific area
+        if (x > specificArea.x1 && x < specificArea.x2 && y > specificArea.y1 && y < specificArea.y2) {
+            toggleCXRImaging(); // Call the function
+        }
+    }
+        document.getElementById('canvas').addEventListener('click', onCanvasCXRClick);
+    </script>
+
+        <script src="UI/uidesign.js"></script>
+        <script href="UI/snackbar.js"></script>
+        <script type="module"> //THIS IS THE LAB ORDERS MODULE
+            import { LO } from './modules/labOrders/labOrders.js'
+            import { setupLabOrdersInput } from './modules/labOrders/labOrdersControls.js'
+            
+            var patientLabOrderArray = [];
+            var legacyPatientLabOrderArray = [];
+            var labOrders = [];
+            // Array.prototype.push.apply(labOrders, LO())
+            setupLabOrdersInput(patientLabOrderArray);
+            // console.log(patientLabOrderArray)
+            
+        </script>
+       
+
+    </html>

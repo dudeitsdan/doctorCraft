@@ -1,0 +1,32 @@
+{
+  "name": "ajax-attempt-1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@babel/preset-react": "^7.23.3",
+    "ajax": "^0.0.4",
+    "babel-loader": "^9.1.3",
+    "body-parser": "^1.20.2",
+    "bootstrap": "^5.3.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.0.3",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.0.2",
+    "openai": "^4.24.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

@@ -1,0 +1,693 @@
+
+//window.CP.PenTimer.MAX_TIME_IN_LOOP_WO_EXIT = 6000;
+var special=undefined; //this variable is rapidly passed through multiple functions and acts as the datapoint for something before moving on to be a variable for another thing within the same function execution.
+
+var patient = {
+  
+  //intrinsic patient metabolic demands
+  VO2: 250, //mL/min (normal is 200-250 mL/min)
+  VO2_interpretation: function() {
+    if (patient.VO2>350 && patient.VO2 < 700) {
+      patient.RER = 0.8
+      patient.lactateDecrease();
+      return "Increased Metabolic Demands"
+
+    } if (patient.VO2<200) {
+      patient.RER = 0.8
+      patient.lactateDecrease()
+      return "Decreased Metabolic Demands"
+      
+    } if (patient.VO2>200 && patient.VO2<350) {
+      patient.RER = 0.8
+      patient.lactateDecrease()
+      return "At rest"
+      
+    } if (patient.VO2>700) {
+      patient.RER = 1.1
+      patient.lactateIncrease();
+      return "High Metabolic Demands at/above Anaerobic Threshold"
+    }
+  },
+  VCO2_to_pCO2: function () {
+    return patient.VCO2()*(7/30) //need to get back to this... i don't know what the conversion is of VCO2 to pCO2. I presumed 225 mL/min VO2 for an average person
+  },
+  VCO2: function () {
+    if (patient.RER > 0.99) { //anaerobic threshold reached, lactic acidosis
+      return patient.RER*patient.VO2
+    }
+    if (patient.RER <=0.99) { //not at anaerobic threshold
+      return patient.RER*patient.VO2
+    }
+  },
+  RER: 0.8,
+  
+  //Pulmonary Parameters
+  deadSpace: 0.3, // this is important for determining CO2 exhalation. <30% is normal. >30% means unhealthy lungs. Deadspace change as a function of tidal volumes.
+  plantGainModifier: ()=> {return 5*patient.VO2/225}, //(ΔpCO2/ΔVentilation)
+  loopGainModifier: undefined, // for future use, modifies apnea threshold;
+  controllerGainModifier: undefined, //place-holder for ΔVent/ΔpCO2
+  FEV1: 1, //1 = 100% predicted
+  FVC: 1,
+  totalLungCapacity: 1,
+  FRC: 1,
+  RV: 1, 
+  DLCO: 0.8,  //<-- this version corrected for Hg
+  DLCO_uncorrectedHg: function() {
+    return patient.Hg/14*patient.DLCO
+  },
+  loopGainModifier: undefined,
+  apneaThreshold: undefined,
+  compliance: undefined,
+  RRcycleRefractoryTime: 1750,
+  RR_observed: undefined,
+  timeSinceLastBreath: 0,
+  breathTime: 0,
+  lastBreathTimer: 0,
+  
+  //BLOOD-GAS/ACID-BASE PARAMETERS
+  pH: 7.40,  // example value, can be set to any appropriate value
+  baselinepCO2: 40,
+  pCO2: 40,  // example value, can be set to any appropriate value
+  pO2: 60,
+  spO2: 90,
+  oxygenContent: 1600,
+  bicarb: ()=>{return 24-1.1*patient.lactate},
+  lactate: 0,
+  lactateIncrease: function() {
+    if (patient.VO2 > 700) {
+patient.lactate = patient.lactate+0.000006*(20-patient.lactate)/(20)
+      }
+    if (patient.VO2 < 700) {
+      patient.lactate = patient.lactate-(randomNormal()+1)*0.0001*(patient.lactate)/(patient.lactate+1)
+    }
+  },
+  lactateDecrease: function() {
+    
+    if (patient.VO2 > 700) {
+       patient.lactate = patient.lactate+0.001*patient.lactate/(patient.lactate-3)
+    } if (patient.VO2 < 700) {
+      patient.lactate = patient.lactate-(randomNormal()+1)*0.00001*(patient.lactate)/(patient.lactate+1)
+    }   if (patient.VO2 < 300) {
+      patient.lactate = patient.lactate-(randomNormal()+1)*0.0001*(patient.lactate)/(patient.lactate+1)
+    }
+  },
+  lactateChange: false,
+  lactateChangingUp: false,
+  lactateChangingDown: false,
+  baseExcess: undefined,
+ 
+  //CARDIAC Parameters
+  cardiacOutput: undefined,
+  strokeVolume: undefined,
+  afterLoad: undefined,
+  heartRate: () => {return patient.heartRateArrayMean},
+    sinusNodeAutomaticity: (heartRate=50) => {return 60/(((heartRate||60)*patient.VO2/150)+(randomNormal())*patient.HRVModifier)}, //basic heart rate sinus nodal rhythm... measured as seconds between heart beats
+    sinusNodeAutomaticity_Corrected: () => {let x = patient.sinusNodeAutomaticity(); if(x<0.33){return 0.33+randomNormal()*0.02} if (x<1.05&&x>0.33){return x+Math.random()*0.05} if(x>=1.05){return 1.05+randomNormal()*0.1}},
+    HRVModifier: 20, // in %
+    heartRateArrayDifferences: [],
+    hrWentOff: false,
+    HRrefractoryTime: 300, //milliseconds
+    heartRate_calc: undefined,
+  SVR: undefined,
+  CVP: undefined,
+  sSBP: undefined,
+  sDBP: undefined,
+  sMAP_time: function () {
+    (1/3)*SBP+(2/3)*DBP
+  },
+  sMAP_CPSVRCVP: function() {
+    return patient.cardiacOutput*patient.SVR+patient.CVP
+  },
+  pSBP: undefined,
+  pDBP: undefined,
+  pMAP: undefined,
+  
+  // Cardiac Parameters for EKG
+  EKGupdateLastTime: undefined,
+ 
+  //HEMATOLOGIC parameters
+  Hg: 12,
+  
+  //DATA COLLECTION PARAMETERS (stDev, mean, etc. - statistics)
+  respVariability: undefined,
+  respVarArray: [],
+  pCO2Array: [],
+  pO2Array: [],
+  oxygenContentArray: [],
+  heartRateArray: [],
+  respVarSTD: [],
+  
+  pHArray: [],
+  pCO2Array: [],
+  pO2Array: [],
+  pHArraySum: [],
+  RR_observedArray: [],
+  pHArrayMean: 7.3,
+  pCO2ArrayMean: 40,
+  pO2ArrayMean: 60,
+  RR_ObservedMean: 12,
+  oxygenContentMean: 1600
+};
+
+var device = {
+  ventilator: {
+    mode: {
+      ACVC: {
+        RR: undefined, // Respiratory Rate - Assign a value
+        TT: undefined, // Tidal Volume - Assign a value
+        PEEP: undefined, // Positive End-Expiratory Pressure - Assign a value
+        fiO2: undefined, // Fraction of Inspired Oxygen - Assign a value
+        iTime: undefined, // Inspiratory Time - Assign a value
+        flow: undefined  // Flow rate - Assign a value
+      }
+    }
+  },
+  NC: {
+    flow: [
+      21, 24, 28, 32, 36, 40, 44
+      ]
+    }
+};
+
+let aveBreathArray = []
+
+//SYSTEM PARAMETERS:
+var updateModifier = 15; //divides into "x" updates per second
+
+//FUNCTIONS
+const display = function (id, value) {
+  document.getElementById(id).innerHTML = value;
+}
+
+var currentTime;
+
+/* BEGINNING OF TIME-STAMP EQUATION */
+//This section creates a GLOBAL TIMESTAMP to allow the rest of the functions to occur repeatedly.
+// async function checkPerformanceNowRepeatedly(interval) {
+//     while (true) {
+//         currentTime = performance.now();
+//         // console.log(`Current time: ${Math.round(currentTime)} milliseconds`);
+
+//         // Wait for the specified interval before next iteration
+//         await new Promise(resolve => setTimeout(resolve, interval));
+//     }
+// }
+// checkPerformanceNowRepeatedly(1000/updateModifier); // determines how often performance.now() gets updated. Consider this the frame-rate of the system. Ideally, 15 per second.
+/*  END OF TIME-STAMP EQUATION */
+
+/* DETERMINES CO2 LEVEL */
+// /* I need to create a function that uses an input of metabolic rate to slowly add to pCO2 */
+let now=0;
+let breathCount=0;
+let counter = 0;
+
+var maxO2content = (1.39*100*patient.Hg)+(760*0.003)
+
+patient.spO2 = (-100) / Math.pow((1 + (patient.pO2 + 1.1) / (5.1 * 0.65)), 0.1) ** (20 * (patient.pO2 + 1.1) / 146) + 100;
+patient.oxygenContent = (1.39*patient.Hg*patient.spO2)+(0.0031*60)
+
+// paO2 as a function of spO2: 
+    //(-100/(〖((1+(x-47.8)/(0.001*9.3))〗^0.19)^(20(x-47.8)/149))+100)
+
+let lastUpdateTime = 0;
+const updateInterval = 1000 / updateModifier; // Set this to control update frequency
+
+/*BEGIN UPDATER() --> */
+function updater(timestamp) {
+  if (timestamp - lastUpdateTime > updateInterval) {
+        lastUpdateTime = timestamp;
+  const metabRate = patient.VCO2_to_pCO2()/60;
+  currentTime = performance.now();
+  if ((performance.now()-now)>(1000/updateModifier)) {
+    //First, create now as a variable for creating a timestamp for since last updater()
+    now = performance.now();
+    
+    //Update patient pCO2 to reduce on tick-rate and metabolic rate.
+    patient.pCO2 = patient.pCO2 + (metabRate)/updateModifier
+    
+    //Update pH to reflect new CO2 (assuming static bicarb given acute)
+    patient.pH = 6.1 + Math.log10(Math.round(patient.bicarb()) / (0.03 * patient.pCO2));
+    
+    //Update pO2 to reflect CURRENT oxygen-content
+    //patient.pO2 = (patient.oxygenContent - (patient.Hg * 1.36 * patient.spO2)) / 0.0031;
+
+      // console.log("O2 Content: "+patient.oxygenContent)
+     // console.log(patient.pH.toFixed(2)+"||"+Math.round(patient.pCO2)+"||"+patient.pO2); 
+     // console.log(patient.spO2);
+     // console.log("Oxygen content: "+patient.oxygenContent);
+     // console.log("Time since apnea: "+Math.round(performance.now()/1000))
+    
+    //  // patient.pO2 = (patient.oxygenContent - (patient.Hg * 1.36 * patient.spO2)) / 0.0031;
+    // if (patient.spO2 < 100) {
+      patient.oxygenContent = patient.oxygenContent - ((patient.VO2)/60)/updateModifier;
+      let spO2 = (patient.oxygenContent) / (patient.Hg * 1.39);
+      let pO2;
+    if (spO2 > 100 && patient.oxygenContent > maxO2content) {
+      console.log("Error! Oxygen content provided greater than max O2 content based off hemoglobin.")
+    }
+    if (spO2 > 100 && patient.oxygenContent <= maxO2content) {
+      pO2 = patient.oxygenContent-(patient.Hg*1.39)/0.0031
+        console.log("Fully Saturated")
+    }
+    if (spO2 >= 90) {
+      pO2 = (spO2-62)**2/(4*4.3)*1.315
+    }
+    if (spO2 >50 && spO2 <90) {
+      pO2 = 0.019*(spO2-49.3)**2+0.1*(spO2-49.3)+24.45
+    }
+    if (spO2 <50 && spO2 >= 0) {
+      pO2 = -((spO2-62)**2)/(4*(4.3))*(.124)+28
+    }
+    if (spO2 < 0) {
+      console.log("Error: Oxygen content < 0")
+    }
+    
+    patient.pO2 = pO2;
+    patient.spO2 = spO2;
+    
+    }
+    requestAnimationFrame(updater);
+  }
+ 
+ 
+function updateDisplay(patient) {
+    // Create an object mapping IDs to their new values
+    const updates = {
+        "pH": `pH: ${patient.pHArrayMean.toFixed(2)} mmHg`,
+        "pCO2": `pCO2: ${Math.round(patient.pCO2ArrayMean)} mmHg | <span style="font-size: 12px">${Math.round(patient.pCO2ArraySTD)} STD | Winter's: ${Math.round((()=>patient.bicarb()*1.5+8)())} +/- 2</span>`,
+        "pO2": `pO2: ${Math.round(patient.pO2ArrayMean)} mmHg | <span style="font-size: 12px">${Math.round(patient.pO2ArraySTD)} STD</span>`,
+        "spO2": `SpO2: ${Math.round(patient.spO2)}%`,
+        "o2Content": `Oxygen Content: ${Math.round(patient.oxygenContentMean)} mL`,
+        "hemoGlobin": `Hemoglobin: ${Math.round(patient.Hg)} g/dL`,
+        "VO2": `VO2: ${Math.round(patient.VO2)} mL/min`,
+        "bicarb": `HCO3-: ${Math.round(patient.bicarb())} mEq/L`,
+        "timeSinceLastBreath": `Time since last breath: ${Math.round(patient.lastBreathTimer / 1000)} seconds`,
+        "RR": `Respiratory Rate: ${patient.RR_observed||"'Calculating...'"} breaths per minute`,
+        "lactate": `Lacate: ${Math.round(patient.lactate)}`,
+        "VCO2": `VCO2: ${Math.round(patient.VCO2())} mL/min`,
+        "RER": `RER: ${patient.RER}`,
+        "HR": `HR: ${Math.round(patient.heartRate_calc)} bpm | <span style="font-size: 12px">HRV(RMSSD) ${Math.round(patient.heartRateVarRMSSD)||"'Calculating...'"}</span>`,
+        "rangeVO2Output": `${patient.VO2_interpretation()}`
+    };
+
+    // Update the DOM only if there's a change
+    for (const id in updates) {
+        const element = document.getElementById(id);
+        if (element && element.innerHTML !== updates[id]) {
+            element.innerHTML = updates[id];
+        }
+    }
+}
+// Call this function whenever you need to update the display
+updateDisplay(patient);
+  
+//APNEA THRESHOLD
+  if (patient.pCO2 > 47) {
+        askToBreath(); 
+      }
+  if (patient.pH < 7.30) {
+        askToBreath(); 
+      }
+  if (patient.pO2 <= 56) {
+        askToBreath();
+      }
+  //<--- } is the END OF BREATHING SCENARIO
+  
+  //CREATE A TIME-STAMP FOR NOW, LAST BREATH, AND 
+  patient.lastBreathTimer = currentTime-patient.timeSinceLastBreath
+  
+   requestAnimationFrame(updater)//allows updater to repeat
+} // } is the <--END OF UPDATER()
+
+/*<--
+
+# Updater contains
+  - updateModifier (number corresponds with how many times pCO2 and pH update per second)
+  - I call the value of the metabolic rate (can't for some reason call directly the value)
+  - I then ask an if-then statement (if time since last UPDATER() is >1/(updateModifier) seconds then CHANGE PCO2 and PH...)
+    - pCO2 changes to a higher number as a function of the metabolic rate
+    - pH changes as a function of the pCO2
+    - console.log => result of pCO2 and pH
+  - Function call-back to UPDATER() again at 15 updates per second
+
+END 
+*/
+
+/* BEGIN --> */
+
+function askToBreath() {
+  /*  BREATHING PHYSIOLOGY:
+      - if pCO2 rises, ETCO2 should rise as well for a spontaneous patient. pCO2 exchange is primarily dependent on J = – D (dC/dx) where J is the amount diffused. DLCO = D x A / T. A is alveolar surface area and T is average thickness of the membranes. D is diffusion coefficient.  */
+  
+  let breathRefractoryTime = patient.RRcycleRefractoryTime;
+  let diffusionCapacity, deadSpace, tidalVolume, cardiacOutput, endTidalCO2conversion, endTidalCO2
+  deadSpace = patient.deadSpace
+    const currentSeconds = performance.now()
+    const intervalBetween = currentSeconds - patient.lastBreath
+    
+    //create an if-then statement that asks, if the time since last breath was >1000 milliseconds, then proceed with following functions.
+  if (currentSeconds - patient.timeSinceLastBreath >= breathRefractoryTime) { //ALLOWS THE BREATH
+    // console.log("Breathe now @: "+ Math.round(performance.now()/1000)+" seconds");
+
+    return (function () { 
+      
+      patient.breathTime = performance.now()
+      patient.pCO2 = patient.pCO2-patient.plantGainModifier()*(1-deadSpace)*(patient.pCO2)/40
+      
+      patient.oxygenContent = patient.oxygenContent+0.8*maxO2content*patient.DLCO_uncorrectedHg()*((maxO2content-patient.oxygenContent)/maxO2content)
+      patient.timeSinceLastBreath = performance.now();
+      // console.log("Breathing. Time since last breath: "+Math.round(patient.lastBreathTimer)/1000);
+      
+
+    patient.respVarArray.push(patient.lastBreathTimer);
+    patient.respVarSum = patient.respVarArray.reduce((acc, val)=>acc+val, 0)
+    patient.respVarMean = patient.respVarSum/patient.respVarArray.length
+    patient.respVarVariance = patient.respVarArray.reduce((acc, val) => acc + (val - patient.respVarMean) ** 2, 0) / patient.respVarArray.length;
+    patient.respVarSTD = Math.sqrt(patient.respVarVariance);
+      
+      
+  if (aveBreathArray.length < 4) {
+    aveBreathArray.push(patient.lastBreathTimer)
+  } 
+  if (aveBreathArray.length >= 4) {
+    aveBreathArray.shift()
+    aveBreathArray.push(patient.lastBreathTimer)
+    let sum = aveBreathArray.reduce((accumulator, currentValue) => {
+    return accumulator + currentValue;
+}, 0);
+
+    // Calculate the average
+    let average = sum / aveBreathArray.length;
+
+    patient.RR_observed = Math.round(60/(average/1000));
+    // console.log(average)
+  } 
+      // patient.RR_observed = (Math.round(60/(patient.lastBreathTimer/1000)))
+    })();
+   
+    //Display a heartbeat on canvas
+    
+    //after everything initiated, "time since last breath" is reset  
+  } // END OF -- IF-THEN BREATHE?:OKAY STATEMENT
+  
+}
+/*<--- 
+   Breathe() should:
+    - reduce pCO2 by a value that is dependent on diffusionCapacity, deadSpace, tidalVolume. 
+       - deadSpace = some level of anatomic dead space and physiologic dead space
+       - tidalVolume = some set value which i can alter later
+       - diffusionCapacity = 
+    - Value "X" should depend on pCO2 (if lower pCO2, then it will remove less pCO2 than if higher pCO2)
+END*/
+
+function dataCollection() {
+  // CO2 data collection
+  patient.pCO2Array.push(patient.pCO2)
+  patient.pCO2ArraySum = patient.pCO2Array.reduce((acc, val)=>acc+val, 0)
+  patient.pCO2ArrayMean = patient.pCO2ArraySum/patient.pCO2Array.length
+  patient.pCO2ArrayVariance = patient.pCO2Array.reduce((acc, val) => acc + (val - patient.pCO2ArrayMean) ** 2, 0) / patient.pCO2Array.length;
+  patient.pCO2ArraySTD = Math.sqrt(patient.pCO2ArrayVariance);
+  
+  // O2 data collection
+  patient.pO2Array.push(patient.pO2)
+  patient.pO2ArraySum = patient.pO2Array.reduce((acc, val)=>acc+val, 0)
+  patient.pO2ArrayMean = patient.pO2ArraySum/patient.pO2Array.length
+  patient.pO2ArrayVariance = patient.pO2Array.reduce((acc, val) => acc + (val - patient.pO2ArrayMean) ** 2, 0) / patient.pO2Array.length;
+  patient.pO2ArraySTD = Math.sqrt(patient.pO2ArrayVariance);
+}
+
+setInterval(dataCollection, 2000)
+
+// var timeSinceLastBreath=0;
+// var converter;
+// function work() {
+//   function increasepCO2(m, b) {
+//     let startTime = performance.now(); // Start time
+//     let y = b; // Initial value of y
+
+//     function update() {
+//         let currentTime = performance.now(); // Current time
+//         let x = (currentTime - startTime) / 1000; // Time elapsed in seconds  
+//         let breathCounter = 0;
+//         y = patient.metabolicRate * x + b; // Calculate new value of y
+//       // console.log("y: "+y) // logs CO2 levels of patient
+//       patient.pCO2 = y;
+//       patient.pH = 6.1 + Math.log10(patient.bicarb / (0.03 * y));
+//       // console.log(x)
+//     } //updates patient.pCO2, patient.pH
+//     return setInterval(update, 1000/15); // Update every 100 milliseconds
+// }
+
+//   function breathe () {
+//     timeSinceLastBreath = 0;
+//     converter=performance.now()
+//   }
+//   var intervalId = increasepCO2(patient.normalMetabolicRate, patient.baselinepCO2); // Start the function
+
+//   // Optional: stop the function after a certain period
+//   setTimeout(() => {
+//       clearInterval(intervalId);
+//       console.log("Stopped updating y.");
+//   }, 1000*60*30); // Stops after 30 minutes
+// }
+// work()
+
+updater();
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* CARDIAC PARAMETERS */
+
+function updateHR () {
+  patient.heartRateArray.push()
+}
+
+function heartBeat() {
+  console.log("beep")
+}
+
+// patient.heartRateArray.push()
+const heartRate = function () {
+
+}
+
+var sinceLastHeartBeat=0;
+var sinceLastHeartBeatCheck=0;
+
+/* Function askToHeartBeat() asks for the heart to pump. If it beyond its refractory period, then the heart is allowed to beat. If not, then it cannot beat. It ticks at 30 times per second. */
+function askToHeartBeat () {
+  let currentTime = performance.now();
+     let currentTimeCheck = performance.now();
+      let SANODE = patient.sinusNodeAutomaticity_Corrected()
+    if (currentTimeCheck - sinceLastHeartBeatCheck > 10) {
+        sinceLastHeartBeatCheck=performance.now();
+      if (currentTime - sinceLastHeartBeat > 1000*SANODE) {
+    sinceLastHeartBeat = performance.now();
+    triggerHeartbeat()
+
+      //function () {
+        //draws a p,qrs,t wave. //then returns to flatline.
+    
+    patient.heartRateArray.push(SANODE)
+    
+    if (patient.heartRateArray.length > 20) {
+      patient.heartRateArray.shift()
+      let HRdif = patient.heartRateArray[1]-patient.heartRateArray[0]
+      patient.heartRateArrayDifferences.push(HRdif)
+        if (patient.heartRateArrayDifferences.length > 100) {
+          patient.heartRateArrayDifferences.shift()
+          patient.heartRateVarSumOfSquares = patient.heartRateArrayDifferences.reduce((sum, val) => sum+val*val,0)
+    patient.heartRateVarMeanOfSquares = patient.heartRateVarSumOfSquares/patient.heartRateArrayDifferences.length
+    patient.heartRateVarRMSSD = Math.sqrt(patient.heartRateVarMeanOfSquares)*1000
+        }
+    }
+    
+    patient.heartRateArraySum = patient.heartRateArray.reduce((cum, add)=>cum+add, 0)   
+    patient.heartRateArrayMean = patient.heartRateArraySum/patient.heartRateArray.length
+    patient.heartRate_calc = 60/patient.heartRateArrayMean
+    patient.heartRateArrayVar = patient.heartRateArray.reduce((cum, lol)=>cum+(lol-patient.heartRateArrayMean)**2, 0)*1000
+    patient.heartRateArraySTD = Math.sqrt(patient.heartRateArrayVar)
+                
+      }
+    
+
+    
+    // //Display a heartbeat on canvas
+    // ctxHeart.fillStyle = "red";
+    // setInterval(function() {
+    //   ctxHeart.fillRect(0,0,100,100)
+    //   ctxHeart.fillStyle="black"}, 
+    //             100)
+    }
+  
+                requestAnimationFrame(askToHeartBeat)
+  } //end of if-then parameter (okay to heartbeat)
+  requestAnimationFrame(askToHeartBeat)
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// const c = document.getElementById("vent");
+// const ctxHeart = c.getContext("2d");
+// ctxHeart.strokeStyle = "black";
+// var height = c.height;
+// var weight = c.width;
+// function deCasteljau(points, t) {
+//   let tempPoints = points.map((point) => ({ ...point }));
+//   for (let i = 1; i < points.length; i++) {
+//     for (let j = 0; j < points.length - i; j++) {
+//       tempPoints[j] = {
+//         x: (1 - t) * tempPoints[j].x + t * tempPoints[j + 1].x,
+//         y: (1 - t) * tempPoints[j].y + t * tempPoints[j + 1].y
+//       };
+//     }
+//   }
+//   return tempPoints[0];
+// }
+/*function cl(x1, y1, x2, y2) {
+  ctx.beginPath()
+  ctx.moveTo(x1, y1)
+  ctx.lineTo(x2, y2)
+  ctx.stroke()
+}
+function PEEPline() {
+  cl(x, height / 2 + height / 3, 
+       x, height / 1.3)
+}
+*/
+const canvas = document.getElementById('canvas');
+const context = canvas.getContext('2d');
+const width = canvas.width;
+const height = canvas.height;
+
+let ekgX = 0;
+let startTime = null;
+let animateHeartbeat = false;
+
+const duration = 100;
+const startY = height / 2;
+const endY = height / 3;
+const trailDuration = 4000;
+const trail = [];
+
+function triggerHeartbeat() {
+    animateHeartbeat = true;
+    startTime = null;
+}
+
+function drawText() {
+    context.clearRect(0, height - 30, width, 30); // Clear area for the text
+    context.font = '20px Arial';
+    context.fillStyle = 'red';
+    context.fillText("Heart Rate: "+Math.round(patient.heartRate_calc)+" bpm", 10, height - 10);
+}
+
+setInterval(drawText, 1000);
+
+function animate(time) {
+    if (animateHeartbeat && !startTime) {
+        startTime = time;
+    }
+
+    const elapsed = time - (startTime || time);
+    const progress = Math.min(elapsed / duration, 1);
+
+    let yPosition;
+    if (animateHeartbeat) {
+        if (elapsed <= duration / 2) {
+            yPosition = startY + (endY - startY) * progress * 2;
+        } else {
+            let downProgress = (elapsed - duration / 2) / (duration / 2);
+            yPosition = endY - (endY - startY) * downProgress;
+        }
+        if (elapsed >= duration) {
+            animateHeartbeat = false;
+        }
+    } else {
+        yPosition = startY;
+    }
+
+    const speed = 0.2;
+    ekgX = (ekgX + speed) % width;
+
+    // Draw the trail
+    trail.push({ x: ekgX, y: yPosition, time });
+    context.clearRect(0, 0, width, height - 30); // Clear area for the trail
+    trail.forEach((point, index) => {
+        const age = time - point.time;
+        const opacity = 1 - age / trailDuration;
+        if (opacity > 0) {
+            context.beginPath();
+            context.arc(point.x, point.y, 1, 0, 2 * Math.PI, false);
+            context.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+            context.fill();
+            context.closePath();
+        } else {
+            trail.splice(index, 1);
+        }
+    });
+
+    // Draw the text
+    
+
+    requestAnimationFrame(animate);
+}
+
+// Initial call to draw text and start animation
+drawText();
+requestAnimationFrame(animate);
+
+
+function randomNormal(mu = 0, sigma = 0.5) {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+    while (v === 0) v = Math.random();
+    let num = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    return num * sigma + mu;
+}
+let randomNumber = randomNormal();
+console.log(randomNumber);
+
+
+patient = {...patient, 
+              chartData: {
+                point: {
+                  x: undefined, 
+                  y: undefined,
+                  timeStamper: performance.now(),
+                }
+              }}
+patient.timeStamper = performance.now()
+
+
+function letsChartData () {
+  let timeStampHere = performance.now()
+
+  function makeData (ArrayVariable, singleDataPoint) {
+      ArrayVariable.push(singleDataPoint)
+      let sum = ArrayVariable.reduce((arr, res) => arr+res, 0)
+      let mean = sum/ArrayVariable.length
+      // console.log("average: "+mean)
+      special = mean;
+        if (ArrayVariable.length > 2000) {
+          // console.log(ArrayVariable.length)
+          ArrayVariable.shift();
+        }
+    }
+
+  if ((timeStampHere - patient.timeStamper) > 800) {
+    makeData(patient.pHArray, patient.pH); patient.pHArrayMean = special;
+        // console.log(special+" 1")
+    makeData(patient.pCO2Array, patient.pCO2); patient.pCO2ArrayMean = special;
+        // console.log(special+" 2")
+    makeData(patient.pO2Array, patient.pO2); patient.pO2ArrayMean = special;
+    makeData(patient.RR_observedArray, patient.RR_observed); patient.RR_observedMean = special;
+    // makeData(patient.oxygenContentArray, patient.oxygenContent)
+        // console.log(special+" 3")
+    // console.log("working...")
+    special = undefined;
+    patient.timeStamper = performance.now();
+  }
+  requestAnimationFrame(letsChartData)
+}  requestAnimationFrame(letsChartData)
+letsChartData();

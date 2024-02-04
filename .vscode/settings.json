@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/e89216da-ca37-41a4-b50b-1e774a793318/resourceGroups/TheDoctorRPG_group/providers/Microsoft.Web/sites/TheDoctorRPG",
+    "appService.deploySubpath": "."
+}
