@@ -122,7 +122,7 @@
             /* position: relative; */
             top: 0;
             font-family: 'Doctor Soos Bold', sans-serif;
-            overflow-y: scroll;
+            overflow-y: auto;
         }
 
     .chat-box, .chat-send-box {
@@ -1228,37 +1228,37 @@
         // Start the game loop
         gameLoop();
 
-    var cxrOrdered = false;
-    function toggleCXRImaging() {
-        if (cxrOrdered === true) {
-            if (CXRtoggled === true) {
-                return CXRtoggled = false
-            }
-            if (CXRtoggled === false) {
-                return CXRtoggled = true
-            }
-        }
-        if (cxrOrdered === false) {
-            alert("You must order a chest x-ray first")
-        }
-    }
+    // var cxrOrdered = false;
+    // function toggleCXRImaging() {
+    //     if (cxrOrdered === true) {
+    //         if (CXRtoggled === true) {
+    //             return CXRtoggled = false
+    //         }
+    //         if (CXRtoggled === false) {
+    //             return CXRtoggled = true
+    //         }
+    //     }
+    //     if (cxrOrdered === false) {
+    //         alert("You must order a chest x-ray first")
+    //     }
+    // }
 
-        // This function will be called whenever the canvas is clicked
-    function onCanvasCXRClick(event) {
-        const canvas = document.getElementById('canvas');
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left; // x position within the canvas
-        const y = event.clientY - rect.top; // y position within the canvas
+    //     // This function will be called whenever the canvas is clicked
+    // function onCanvasCXRClick(event) {
+    //     const canvas = document.getElementById('canvas');
+    //     const rect = canvas.getBoundingClientRect();
+    //     const x = event.clientX - rect.left; // x position within the canvas
+    //     const y = event.clientY - rect.top; // y position within the canvas
 
-        // Define the specific area, for example a rectangle
-        const specificArea = { x1: 120, y1: 412, x2: 160, y2: 452 }; // Specific area coordinates
+    //     // Define the specific area, for example a rectangle
+    //     const specificArea = { x1: 120, y1: 412, x2: 160, y2: 452 }; // Specific area coordinates
 
-        // Check if the click was inside the specific area
-        if (x > specificArea.x1 && x < specificArea.x2 && y > specificArea.y1 && y < specificArea.y2) {
-            toggleCXRImaging(); // Call the function
-        }
-    }
-        document.getElementById('canvas').addEventListener('click', onCanvasCXRClick);
+    //     // Check if the click was inside the specific area
+    //     if (x > specificArea.x1 && x < specificArea.x2 && y > specificArea.y1 && y < specificArea.y2) {
+    //         toggleCXRImaging(); // Call the function
+    //     }
+    // }
+    //     document.getElementById('canvas').addEventListener('click', onCanvasCXRClick);
     </script>
 
         <script src="UI/uidesign.js"></script>

@@ -3,9 +3,9 @@ import { LO } from "./labOrders.js";
 
 // Assuming patientLabOrderArray is an array to store selected lab orders
 export function setupLabOrdersInput(patientLabOrderArray, legacyPatientLabOrderArray) {
-    const labOrders = [];
+    const labOrders = []; // creates an array
     Array.prototype.push.apply(labOrders, LO()); // Populate labOrders from LO
-    console.log(patientLabOrderArray, "is what it starts as")
+    // console.log(patientLabOrderArray, "is what it starts as")
 
     legacyPatientLabOrderArray = [];
     console.log("legacy: ", legacyPatientLabOrderArray)
