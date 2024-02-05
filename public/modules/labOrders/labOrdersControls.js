@@ -62,16 +62,13 @@ export function setupLabOrdersInput(patientLabOrderArray, legacyPatientLabOrderA
                             time: `${suggestion.time}`,
                             actualValue: `${suggestion.actualValue}`,
                         })
-                        // console.log("legacy post-push:", legacyPatientLabOrderArray)
                     }
-                    // console.log(patientLabOrderArray[patientLabOrderArray.length-1]["time"]);
-                    // console.log("This is from the other thing (new)", patientLabOrderArray);
 
                     // Clear input and suggestions
                     document.getElementById('labOrdersInput').value = '';
                     autocompleteContainer.innerHTML = '';
 
-                    function displayLabOrders(patientLabOrderArray, containerId) {
+                    function displayOrders(patientLabOrderArray, containerId) {
                         // Select the container element
 
                         // document.getElementById('resultsLabs').innerHTML = ""
@@ -98,30 +95,11 @@ export function setupLabOrdersInput(patientLabOrderArray, legacyPatientLabOrderA
                         });
                       }
     
-                    displayLabOrders(legacyPatientLabOrderArray, "resultsLabs")
+                    displayOrders(legacyPatientLabOrderArray, "resultsLabs")
                     legacyPatientLabOrderArray=[];
                     
                 });
                 autocompleteContainer.appendChild(div);
-                
-                // //Now I will create a running list of lab results from this encounter
-                // const resultDiv = document.getElementById('resultLabsContainer');
-
-                // // Iterate through the array
-                // patientLabOrderArray[patientLabOrderArray.length-1]["actualValue"].forEach((item, index) => {
-
-                //     // Create a text node for each element
-                //     const textNode = document.createTextNode(item);
-                
-                //     // Append the text node to the div
-                //     resultDiv.appendChild(textNode);
-                
-                //     // Optionally, append a separator (like a line break) if not the last element
-                //     if (index < arr.length - 1) {
-                //     resultDiv.appendChild(document.createElement('br'));
-                //     }
-                // });
-
             
             });
         }
@@ -157,8 +135,6 @@ function snackbar(type, msg, time){
 const errorMessageDuplicates = document.getElementById('errorMessageDuplicates');
 } 
     
-
-
 export function showLabs(patientLabOrderArray) {
     // console.log("You ordered", patientLabOrderArray[patientLabOrderArray.length-1]["name"], "which will take", patientLabOrderArray[patientLabOrderArray.length-1]["time"], "hours to result.")
     console.log("This is what im looking for", patientLabOrderArray)

@@ -1,9 +1,0 @@
-export function imagingObject() {
-    return [
-        {
-            name: "Chest X-ray",
-            description: "RLL Pneumonia",
-            src: "https://assets.codepen.io/1634552/realCXR_1.png"
-        }
-    ]
-}

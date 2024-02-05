@@ -31,17 +31,17 @@ export default function createImageOrdersModule() {
     fixedDiv.style.backgroundColor = '#333';
     fixedDiv.style.color = 'black';
 
-    // Create the orderedItemsListContainer div
-    var orderedItemsListContainer = document.createElement('div');
-    orderedItemsListContainer.id = 'orderedItemsListContainer';
-    orderedItemsListContainer.style.overflowY = 'auto';
-    orderedItemsListContainer.style.display = 'fixed'; // Note: 'display: fixed' is not valid. Did you mean 'position: fixed' or just to use 'display: block'?
-    orderedItemsListContainer.style.height = '300px';
-    orderedItemsListContainer.style.width = '340px';
-    orderedItemsListContainer.style.color = 'white';
+    // Create the orderedImageContainer div
+    var orderedImageContainer = document.createElement('div');
+    orderedImageContainer.id = 'orderedImageContainer';
+    orderedImageContainer.style.overflowY = 'auto';
+    orderedImageContainer.style.position = 'fixed'; // Note: 'display: fixed' is not valid. Did you mean 'position: fixed' or just to use 'display: block'?
+    orderedImageContainer.style.height = '300px';
+    orderedImageContainer.style.width = '340px';
+    orderedImageContainer.style.color = 'white';
 
     // Append children
-    fixedDiv.appendChild(orderedItemsListContainer);
+    fixedDiv.appendChild(orderedImageContainer);
     ordersContainer.appendChild(h3);
     ordersContainer.appendChild(input);
     ordersContainer.appendChild(autocompleteDiv);

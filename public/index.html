@@ -438,7 +438,7 @@
                                                     <h3 style="color: white">Patients</h2>
                                                     <ul>
                                                     <!-- List of patients -->
-                                                    <li><a href="#" class="button-style" onclick="openPatientDetail('Patient1')">Patient 1</a></li>
+                                                    <a href="#" class="button-style" onclick="openPatientDetail('Patient1')">Patient 1</a></li>
                                                     <!-- More patients -->
                                                     </ul>
                                                 </div>
@@ -1266,13 +1266,19 @@
         <script type="module"> //THIS IS THE LAB ORDERS MODULE
             import { LO } from './modules/labOrders/labOrders.js'
             import { setupLabOrdersInput } from './modules/labOrders/labOrdersControls.js'
+            import { setupImageOrdersInput } from './modules/imaging/imagingObjectControls.js'
             
             var patientLabOrderArray = [];
             var legacyPatientLabOrderArray = [];
             var labOrders = [];
             // Array.prototype.push.apply(labOrders, LO())
-            setupLabOrdersInput(patientLabOrderArray);
+            setupLabOrdersInput(patientLabOrderArray)
             // console.log(patientLabOrderArray)
+            
+            var patientImageOrderArray = [];
+            var legacyPatientImageOrderArray = [];
+            var imageOrders = [];
+            setupImageOrdersInput(patientImageOrderArray);
             
         </script>
        
